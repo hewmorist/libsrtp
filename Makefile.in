@@ -7,8 +7,8 @@
 #
 # runtest       runs test applications 
 # test		builds test applications
-# libsrtp2.a	static library implementing srtp
-# libsrtp2.so	shared library implementing srtp
+# libsrtp.a	static library implementing srtp
+# libsrtp.so	shared library implementing srtp
 # clean		removes objects, libs, and executables
 # distribution  cleans and builds a .tgz
 # tags          builds etags file from all .c and .h files
@@ -22,7 +22,7 @@ HAVE_PKG_CONFIG = @HAVE_PKG_CONFIG@
 all: test 
 
 runtest: test
-	@echo "running libsrtp2 test applications..."
+	@echo "running libsrtp test applications..."
 	crypto/test/cipher_driver$(EXE) -v >/dev/null
 	crypto/test/kernel_driver$(EXE) -v >/dev/null
 	test/rdbx_driver$(EXE) -v >/dev/null
@@ -34,7 +34,7 @@ runtest: test
 ifeq (1, $(USE_OPENSSL))
 	cd test; $(abspath $(srcdir))/test/rtpw_test_gcm.sh >/dev/null	
 endif
-	@echo "libsrtp2 test applications passed."
+	@echo "libsrtp test applications passed."
 	$(MAKE) -C crypto runtest
 
 # makefile variables
@@ -47,9 +47,10 @@ CFLAGS	= @CFLAGS@
 LIBS	= @LIBS@
 LDFLAGS	= -L. @LDFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCDIR) $(CPPFLAGS) $(CFLAGS)
-SRTPLIB	= -lsrtp2
+SRTPLIB	= -lsrtp
 
-AR      = @AR@
+# AR      = @AR@
+AR	   =ar
 RANLIB	= @RANLIB@
 INSTALL	= @INSTALL@
 
@@ -72,7 +73,7 @@ bindir = @bindir@
 
 ifeq (1, $(HAVE_PKG_CONFIG))
 pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = libsrtp2.pc
+pkgconfig_DATA = libsrtp.pc
 endif
 
 SHAREDLIBVERSION = 1
@@ -83,7 +84,7 @@ SHAREDLIBSUFFIXNOVER = so
 SHAREDLIBSUFFIX = $(SHAREDLIBSUFFIXNOVER).$(SHAREDLIBVERSION)
 else ifeq (mingw,$(findstring mingw,@host@))
 SHAREDLIB_DIR = $(bindir)
-SHAREDLIB_LDFLAGS = -shared -Wl,--out-implib,libsrtp2.dll.a
+SHAREDLIB_LDFLAGS = -shared -Wl,--out-implib,libsrtp.dll.a
 SHAREDLIBVERSION =
 SHAREDLIBSUFFIXNOVER = dll
 SHAREDLIBSUFFIX = $(SHAREDLIBSUFFIXNOVER)
@@ -123,26 +124,28 @@ kernel  = crypto/kernel/crypto_kernel.o  crypto/kernel/alloc.o   \
 
 cryptobj =  $(ciphers) $(hashes) $(math) $(kernel) $(replay)
 
-# libsrtp2.a (implements srtp processing)
+
+
+# libsrtp.a (implements srtp processing)
 
 srtpobj = srtp/srtp.o srtp/ekt.o
 
-libsrtp2.a: $(srtpobj) $(cryptobj) $(gdoi)
-	$(AR) cr libsrtp2.a $^
-	$(RANLIB) libsrtp2.a
+libsrtp.a: $(srtpobj) $(cryptobj) $(gdoi)
+	$(AR) cr libsrtp.a $^
+	$(RANLIB) libsrtp.a
 
-libsrtp2.$(SHAREDLIBSUFFIX): $(srtpobj) $(cryptobj) $(gdoi)
+libsrtp.$(SHAREDLIBSUFFIX): $(srtpobj) $(cryptobj) $(gdoi)
 	$(CC) -shared -o $@ $(SHAREDLIB_LDFLAGS) \
                 $^ $(LDFLAGS) $(LIBS)
 	if [ -n "$(SHAREDLIBVERSION)" ]; then \
-		ln -sfn $@ libsrtp2.$(SHAREDLIBSUFFIXNOVER); \
+		ln -sfn $@ libsrtp.$(SHAREDLIBSUFFIXNOVER); \
 	fi
 
-shared_library: libsrtp2.$(SHAREDLIBSUFFIX)
+shared_library: libsrtp.$(SHAREDLIBSUFFIX)
 
-libsrtp2.so: $(srtpobj) $(cryptobj) 
-	$(CC) -shared -Wl,-soname,libsrtp2.so \
-	    -o libsrtp2.so $^ $(LDFLAGS)
+libsrtp.so: $(srtpobj) $(cryptobj) 
+	$(CC) -shared -Wl,-soname,libsrtp.so \
+	    -o libsrtp.so $^ $(LDFLAGS)
 
 # test applications 
 ifneq (1, $(USE_OPENSSL))
@@ -162,7 +165,10 @@ ifeq (1, $(HAVE_PCAP))
 testapp += test/rtp_decoder$(EXE)
 endif
 
-$(testapp): libsrtp2.a
+$(testapp): libsrtp.a
+
+	
+	
 
 test/rtpw$(EXE): test/rtpw.c test/rtp.c test/util.c test/getopt_s.c \
         crypto/math/datatypes.c
@@ -204,6 +210,9 @@ crypto/test/rand_gen$(EXE): crypto/test/rand_gen.c test/getopt_s.c
 crypto/test/rand_gen_soak$(EXE): crypto/test/rand_gen_soak.c test/getopt_s.c
 	$(COMPILE) $(LDFLAGS) -o $@ $^ $(LIBS) $(SRTPLIB)
 
+lib: libcrypto.a	
+	
+
 test: $(testapp)
 	@echo "Build done. Please run '$(MAKE) runtest' to run self tests."
 
@@ -231,26 +240,34 @@ tags:
 
 
 # documentation - the target libsrtpdoc builds a PDF file documenting
-# libsrtp2
+# libsrtp
 
-libsrtp2doc:
+libsrtpdoc:
 	$(MAKE) -C doc
 
 .PHONY: clean superclean distclean install
 
 install:
-	$(INSTALL) -d $(DESTDIR)$(includedir)/srtp2
+	$(INSTALL) -d $(DESTDIR)$(includedir)/srtp
 	$(INSTALL) -d $(DESTDIR)$(libdir)
-	cp $(srcdir)/include/srtp.h $(DESTDIR)$(includedir)/srtp2  
-	cp $(srcdir)/include/ekt.h $(DESTDIR)$(includedir)/srtp2  
-	cp $(srcdir)/include/rtp.h $(DESTDIR)$(includedir)/srtp2  
-	if [ -f libsrtp2.a ]; then cp libsrtp2.a $(DESTDIR)$(libdir)/; fi
-	if [ -f libsrtp2.dll.a ]; then cp libsrtp2.dll.a $(DESTDIR)$(libdir)/; fi
-	if [ -f libsrtp2.$(SHAREDLIBSUFFIX) ]; then \
+#	cp $(srcdir)/include/srtp.h $(DESTDIR)$(includedir)/srtp  
+#	cp $(srcdir)/include/ekt.h $(DESTDIR)$(includedir)/srtp  
+#	cp $(srcdir)/include/rtp.h $(DESTDIR)$(includedir)/srtp 
+	
+	cp $(srcdir)/include/*.h $(DESTDIR)$(includedir)/srtp  
+	cp $(srcdir)/crypto/include/*.h $(DESTDIR)$(includedir)/srtp
+	if [ "$(srcdir)" != "." ]; then cp crypto/include/*.h $(DESTDIR)$(includedir)/srtp; fi
+	
+	
+	
+	
+	if [ -f libsrtp.a ]; then cp libsrtp.a $(DESTDIR)$(libdir)/; fi
+	if [ -f libsrtp.dll.a ]; then cp libsrtp.dll.a $(DESTDIR)$(libdir)/; fi
+	if [ -f libsrtp.$(SHAREDLIBSUFFIX) ]; then \
 		$(INSTALL) -d $(DESTDIR)$(SHAREDLIB_DIR); \
-		cp libsrtp2.$(SHAREDLIBSUFFIX) $(DESTDIR)$(SHAREDLIB_DIR)/; \
-		cp libsrtp2.$(SHAREDLIBSUFFIXNOVER) $(DESTDIR)$(SHAREDLIB_DIR)/; \
-		ln -sfn libsrtp2.$(SHAREDLIBSUFFIX) $(DESTDIR)$(SHAREDLIB_DIR)/libsrtp2.$(SHAREDLIBSUFFIXNOVER); \
+		cp libsrtp.$(SHAREDLIBSUFFIX) $(DESTDIR)$(SHAREDLIB_DIR)/; \
+		cp libsrtp.$(SHAREDLIBSUFFIXNOVER) $(DESTDIR)$(SHAREDLIB_DIR)/; \
+		ln -sfn libsrtp.$(SHAREDLIBSUFFIX) $(DESTDIR)$(SHAREDLIB_DIR)/libsrtp.$(SHAREDLIBSUFFIXNOVER); \
 	fi
 	if [ "$(pkgconfig_DATA)" != "" ]; then \
 		$(INSTALL) -d $(DESTDIR)$(pkgconfigdir); \
@@ -258,16 +275,16 @@ install:
 	fi
 
 uninstall:
-	rm -f $(DESTDIR)$(includedir)/srtp2/*.h
-	rm -f $(DESTDIR)$(libdir)/libsrtp2.*
-	-rmdir $(DESTDIR)$(includedir)/srtp2
+	rm -f $(DESTDIR)$(includedir)/srtp/*.h
+	rm -f $(DESTDIR)$(libdir)/libsrtp.*
+	-rmdir $(DESTDIR)$(includedir)/srtp
 	if [ "$(pkgconfig_DATA)" != "" ]; then \
 		rm -f $(DESTDIR)$(pkgconfigdir)/$(pkgconfig_DATA); \
 	fi
 
 clean:
 	rm -rf $(cryptobj) $(srtpobj) TAGS \
-        libsrtp2.a libsrtp2.so libsrtp2.dll.a core *.core test/core
+        libsrtp.a libsrtp.so libsrtp.dll.a core *.core test/core
 	for a in * */* */*/*; do			\
               if [ -f "$$a~" ] ; then rm -f $$a~; fi;	\
         done;
