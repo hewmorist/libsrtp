@@ -206,7 +206,7 @@ AC_CONFIG_HEADER(crypto/include/config.h:config_in.h)
 AC_CHECK_PROG(PKG_CONFIG, pkg-config, yes)
 if test "x$PKG_CONFIG" != "x"; then
     HAVE_PKG_CONFIG=1
-    AC_CONFIG_FILES([libsrtp2.pc])
+    AC_CONFIG_FILES([libsrtp.pc])
 else
     HAVE_PKG_CONFIG=0
 fi
