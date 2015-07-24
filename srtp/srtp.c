@@ -50,6 +50,7 @@
 #include "alloc.h"           /* for srtp_crypto_alloc()          */
 #ifdef OPENSSL
 #include "aes_gcm_ossl.h"    /* for AES GCM mode  */
+# include "aes_icm_ossl.h"    /* for AES ICM mode  */
 # ifdef OPENSSL_KDF
 # include <openssl/kdf.h>
 # include "aes_icm_ossl.h"    /* for AES GCM mode  */
@@ -2103,7 +2104,8 @@ srtp_crypto_policy_set_rtp_default(srtp_crypto_policy_t *p) {
 void
 srtp_crypto_policy_set_rtcp_default(srtp_crypto_policy_t *p) {
 
-  p->cipher_type     = SRTP_AES_ICM;           
+  //p->cipher_type     = SRTP_AES_ICM; 
+  p->cipher_type     = SRTP_AES_128_ICM; 
   p->cipher_key_len  = 30;                 /* default 128 bits per RFC 3711 */
   p->auth_type       = SRTP_HMAC_SHA1;             
   p->auth_key_len    = 20;                 /* default 160 bits per RFC 3711 */
