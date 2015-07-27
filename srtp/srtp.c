@@ -2261,7 +2261,9 @@ srtp_update_stream(srtp_t session, const srtp_policy_t *policy) {
 void
 srtp_crypto_policy_set_rtp_default(srtp_crypto_policy_t *p) {
 
-  p->cipher_type     = SRTP_AES_ICM;           
+  //p->cipher_type     = SRTP_AES_ICM; 
+  // should cause openssl crypto to be used  
+  p->cipher_type     = SRTP_AES_128_ICM;  
   p->cipher_key_len  = 30;                /* default 128 bits per RFC 3711 */
   p->auth_type       = SRTP_HMAC_SHA1;             
   p->auth_key_len    = 20;                /* default 160 bits per RFC 3711 */
@@ -2273,7 +2275,8 @@ srtp_crypto_policy_set_rtp_default(srtp_crypto_policy_t *p) {
 void
 srtp_crypto_policy_set_rtcp_default(srtp_crypto_policy_t *p) {
 
-  p->cipher_type     = SRTP_AES_ICM;           
+  //p->cipher_type     = SRTP_AES_ICM; 
+  p->cipher_type     = SRTP_AES_128_ICM;
   p->cipher_key_len  = 30;                 /* default 128 bits per RFC 3711 */
   p->auth_type       = SRTP_HMAC_SHA1;             
   p->auth_key_len    = 20;                 /* default 160 bits per RFC 3711 */
