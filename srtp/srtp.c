@@ -50,6 +50,7 @@
 #include "alloc.h"           /* for srtp_crypto_alloc()          */
 #ifdef OPENSSL
 #include "aes_gcm_ossl.h"    /* for AES GCM mode  */
+#include "aes_icm_ossl.h"    /* for AES ICM mode  */
 # ifdef OPENSSL_KDF
 # include <openssl/kdf.h>
 # include "aes_icm_ossl.h"    /* for AES GCM mode  */
